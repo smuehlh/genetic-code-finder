@@ -1,6 +1,6 @@
 # !/usr/bin/env ruby
-require 'byebug'
-require 'optparse'
+require "byebug"
+require "optparse"
 
 =begin
     Create a FASTA file to be used as MaxQuant database.
@@ -16,7 +16,7 @@ require 'optparse'
 =end
 
 # require .rb files in library (including all subfolders)
-Dir[File.join(File.dirname(__FILE__), 'lib', '**', '*.rb')].each do |file|
+Dir[File.join(File.dirname(__FILE__), "lib", "**", "*.rb")].each do |file|
     require File.absolute_path(file)
 end
 

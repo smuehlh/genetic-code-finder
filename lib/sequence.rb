@@ -30,6 +30,14 @@ module Sequence
         }
     end
 
+    def codons
+        genetic_code.keys
+    end
+
+    def amino_acids
+        genetic_code.values.uniq - ["*"]
+    end
+
     def is_stopcodon(codon)
         genetic_code.fetch(codon, "") == "*"
     end

@@ -10,6 +10,8 @@ require "tempfile"
         - split sequence into codons
         - translate sequence, omit stop codon
         - identify stop codon
+        - # amino acids: 20
+        - # codons: 64
 
 =end
 
@@ -48,3 +50,11 @@ assert_false Sequence.is_stopcodon("ATG")
 # - omit trailing stop codon
 assert_equal "ML", Sequence.translate("ATGCTG")
 assert_equal "M", Sequence.translate("ATGTAA")
+
+# Sequence.codons
+# - 64 values
+assert_equal 64, Sequence.codons.size
+
+# Sequence.amino_acids
+# - 20 values
+assert_equal 20, Sequence.amino_acids.size

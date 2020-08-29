@@ -32,8 +32,14 @@ file.unlink
 file = Tempfile.new("gcf")
 file.write(">h1\nSEQ\n>h1\nSEQ")
 file.close
-assert_raise abort {Sequence.read_fasta(file.path)}
+# temporarily redirect stderr to suppress expected stderr- message
+original_stderr = $stderr.clone
+$stderr.reopen(File.new('/dev/null', 'w'))
+assert_raise SystemExit do
+    Sequence.read_fasta(file.path)
+end
 file.unlink
+$stderr.reopen(original_stderr)
 
 # Sequence.split_cdna_into_codons
 # - split each 3. char

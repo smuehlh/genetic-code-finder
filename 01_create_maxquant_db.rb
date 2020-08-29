@@ -28,7 +28,12 @@ class OptParser
         # mandatory parameters
         options[:input] = nil
         options[:output] = nil
-        options[:map] =nil
+        options[:map] = nil
+        options[:codon] = nil
+
+        # optional parameters
+        options[:omit_ile] = true
+        options[:cleavage] = ["K", "R"]
 
         opt_parser = OptionParser.new do |opts|
             opts.banner = "Generate FASTA file to be used as MaxQuant database."
@@ -54,6 +59,27 @@ class OptParser
                 "to simplified FASTA headers, in CSV format.") do |path|
                 options[:map] = path
             end
+            opts.on("-c", "--codon CODON",
+            "Codon to translate into all amino acids." ) do |codon|
+                options[:codon] = codon
+                unless Sequence.genetic_code.key?(codon)
+                    abort "#{codon} not a valid codon."
+                end
+            end
+            opts.on("--ile",
+                "Optional, specify to translate into both Ile and Leu",
+                "NOTE - MaxQuant will pick up only Leu translation") do |opt|
+                options[:omit_ile] = false
+            end
+            opts.on("--cleavage K,R", Array,
+                "Optional, specify to cleave after amino acids other than 'K' and 'R'") do |aminoacids|
+                invalid = aminoacids - Sequence.genetic_code.values
+                if invalid.any?
+                    abort "#{invalid} invalid amino acids"
+                end
+                options[:cleavage] = aminoacids
+            end
+
             opts.separator ""
             opts.on_tail("-h", "--help", "Show this message") do
                 puts opts
@@ -73,6 +99,14 @@ class OptParser
         abort "Missing mandatory argument: --input" unless options[:input]
         abort "Missing mandatory argument: --output" unless options[:output]
         abort "Missing mandatory argument: --map" unless options[:map]
+        abort "Missing mandatory argument: --codon" unless options[:codon]
+
+        if options[:omit_ile]
+            puts "INFO - do not translate #{options[:codon]} into Ile (recommended)"
+        else
+            puts "INFO - translate #{options[:codon]} into both Ile and Leu (not recommended)"
+        end
+        puts "INFO - prepare DB for cleavage after #{options[:cleavage].join(",")}"
         return options
     end
 end

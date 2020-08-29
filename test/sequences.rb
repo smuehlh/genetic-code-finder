@@ -9,6 +9,7 @@ require "tempfile"
         - read FASTA, fail if file contains duplicate headers
         - split sequence into codons
         - translate sequence, omit stop codon
+        - translate sequence with translation for single codon codon set
         - identify stop codon
         - # amino acids: 20
         - # codons: 64
@@ -56,6 +57,11 @@ assert_false Sequence.is_stopcodon("ATG")
 # - omit trailing stop codon
 assert_equal "ML", Sequence.translate("ATGCTG")
 assert_equal "M", Sequence.translate("ATGTAA")
+
+# Sequence.translate_codons_with_one_codon_set
+# - translate all but <codon> to standard genetic code
+assert_equal "AL", Sequence.translate_codons_with_one_codon_set(["ATG", "CTG"], "ATG", "A")
+assert_not_equal "AL", Sequence.translate("ATGCTG")
 
 # Sequence.codons
 # - 64 values

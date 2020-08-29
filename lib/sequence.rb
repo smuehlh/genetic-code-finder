@@ -50,6 +50,16 @@ module Sequence
         end.join("")
     end
 
+    def translate_codons_with_one_codon_set(codons, set_codon, set_aa)
+        codons.map do |codon|
+            if codon == set_codon
+                set_aa
+            else
+                translate(codon)
+            end
+        end.join("")
+    end
+
     def split_cdna_into_codons(cdna)
         cdna.scan(/.{1,3}/)
     end

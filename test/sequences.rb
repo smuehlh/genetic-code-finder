@@ -7,6 +7,7 @@ require "tempfile"
     Test lib/sequences:
 
         - read FASTA, fail if file contains duplicate headers
+        - write FASTA
         - split sequence into codons
         - translate sequence, omit stop codon
         - translate sequence with translation for single codon codon set
@@ -41,6 +42,15 @@ assert_raise SystemExit do
 end
 file.unlink
 $stderr.reopen(original_stderr)
+
+# Sequence.write_fasta
+# - prefix header with ">"
+file = Tempfile.new("gcf")
+Sequence.write_fasta(file, "h1", "SEQ")
+file.rewind
+assert_equal ">h1\nSEQ\n", file.read
+file.close
+file.unlink
 
 # Sequence.split_cdna_into_codons
 # - split each 3. char

@@ -55,8 +55,10 @@ assert_false Sequence.is_stopcodon("ATG")
 # Sequence.translate
 # - translate accordig to standard genetic code
 # - omit trailing stop codon
+# - 'translate' invalid codons as "X"
 assert_equal "ML", Sequence.translate("ATGCTG")
 assert_equal "M", Sequence.translate("ATGTAA")
+assert_equal "MX", Sequence.translate("ATGNAA")
 
 # Sequence.translate_codons_with_one_codon_set
 # - translate all but <codon> to standard genetic code

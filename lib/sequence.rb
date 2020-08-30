@@ -46,7 +46,7 @@ module Sequence
         codons = split_cdna_into_codons(cdna)
         delete_trailing_stopcodon_if_present(codons)
         codons.map do |codon|
-            genetic_code.fetch(codon).upcase
+            genetic_code[codon] || "X"
         end.join("")
     end
 

@@ -55,7 +55,7 @@ class OptParser
             opts.separator "This program comes with ABSOLUTELY NO WARRANTY"
 
             opts.separator ""
-            opts.separator "Usage: ruby #{File.basename($PROGRAM_NAME)} -i input -o output -m dict"
+            opts.separator "Usage: ruby #{File.basename($PROGRAM_NAME)} -i input -o output -m dict -c codon"
 
             opts.on("-i", "--input FILE",
                 "Path to input file, in FASTA format.") do |path|

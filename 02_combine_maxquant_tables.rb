@@ -87,10 +87,37 @@ end
 
 options = OptParser.parse(ARGV)
 
+def read_msms(path)
+    evids_with_msms_data = {}
+    mq_data = ParseMsms.new()
+    IO.foreach(path) do |line|
+        if mq_data.is_header
+            mq_data.parse_header(line)
+            next
+        end
+        mq_data.parse_line(line)
+        evid = mq_data.get_evidenceid
+        scannr = mq_data.get_scannumber
+        supported_pos = mq_data.get_positions_with_b_y_type_support
+
+        unless evids_with_msms_data[evid]
+            evids_with_msms_data[evid] = {scannrs: [], supported: []}
+        end
+
+        evids_with_msms_data[evid][:scannrs].push scannr
+        evids_with_msms_data[evid][:supported] |= supported_pos
+    end
+    evids_with_msms_data
+end
+
+msms_data = read_msms(options[:msms])
+
 fh = File.open(options[:output], "w")
 IO.foreach(options[:evidence]) do |line|
-    fh.puts line
 
+    supported_pos, scannrs = get_corresponding_msms_data(mq_data, msms_data)
+    additional_data = "#{supported_pos.join(";")}\t#{scannrs.join(";")}"
+    fh.puts "#{line}\t#{additional_data}"
 end
 fh.close
 

@@ -5,12 +5,18 @@ require "optparse"
 =begin
     Combine MaxQuant evidence and msms tables.
 
+    Enrich evidence table
+        - skip lines matching the decoy database (which MaxQuant automatically generates and searches against)
+        - add information about b/y-ion support
 
     Args:
         evidence (str): path to input file (MaxQuant evidence.txt)
         msms (str): path to input file (MaxQuant msms.txt)
         map (str): path to input file (mapping between original and shortened FASTA headers)
         output (str): path to output TSV (enriched evidence file)
+
+    Returns
+        an enriched evidence table
 
 =end
 

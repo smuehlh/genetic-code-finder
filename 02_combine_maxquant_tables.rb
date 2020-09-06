@@ -29,6 +29,7 @@ class OptParser
         options[:msms] = nil
         options[:map] = nil
         options[:output] = nil
+        options[:codon] = nil
 
         opt_parser = OptionParser.new do |opts|
             opts.banner = "Combine MaxQuant tables evidence and msms."
@@ -38,7 +39,7 @@ class OptParser
             opts.separator "This program comes with ABSOLUTELY NO WARRANTY"
 
             opts.separator ""
-            opts.separator "Usage: ruby #{File.basename($PROGRAM_NAME)} -i input -o output -m dict"
+            opts.separator "Usage: ruby #{File.basename($PROGRAM_NAME)} -e evidence -m msms -o output --map dict -c codon"
 
             opts.on("-e", "--evidence FILE",
                 "Path to input file evidence.txt.") do |path|
@@ -54,6 +55,13 @@ class OptParser
                 "Path to input file mapping original ",
                 "to shortened FASTA headers.") do |path|
                 options[:map] = path
+            end
+            opts.on("-c", "--codon CODON",
+            "Codon translated into all amino acids." ) do |codon|
+                options[:codon] = codon
+                unless Sequence.codons.include?(codon)
+                    abort "#{codon} not a valid codon."
+                end
             end
             opts.on("-o", "--output FILE",
                 "Path to output file, in FASTA format.") do |path|
@@ -79,6 +87,7 @@ class OptParser
         abort "Missing mandatory argument: --evidence" unless options[:evidence]
         abort "Missing mandatory argument: --msms" unless options[:msms]
         abort "Missing mandatory argument: --map" unless options[:map]
+        abort "Missing mandatory argument: --codon" unless options[:codon]
         abort "Missing mandatory argument: --output" unless options[:output]
 
         return options
@@ -113,6 +122,7 @@ end
 msms_data = read_msms(options[:msms])
 
 fh = File.open(options[:output], "w")
+mq_data = ParseEvidence.new(options[:codon])
 IO.foreach(options[:evidence]) do |line|
 
     supported_pos, scannrs = get_corresponding_msms_data(mq_data, msms_data)

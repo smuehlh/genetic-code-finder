@@ -94,8 +94,6 @@ class OptParser
     end
 end
 
-options = OptParser.parse(ARGV)
-
 def read_msms(path)
     evids_with_msms_data = {}
     mq_data = ParseMsms.new()
@@ -119,15 +117,30 @@ def read_msms(path)
     evids_with_msms_data
 end
 
+def get_corresponding_msms_data(mq_data, evids_with_msms_data)
+    evid = mq_data.get_evidenceid
+    supported = evids_with_msms_data[evid][:supported] || []
+    scannrs = evids_with_msms_data[evid][:scannrs] || []
+
+    [supported, scannrs]
+end
+
+options = OptParser.parse(ARGV)
 msms_data = read_msms(options[:msms])
 
 fh = File.open(options[:output], "w")
 mq_data = ParseEvidence.new(options[:codon])
 IO.foreach(options[:evidence]) do |line|
+    if mq_data.is_header
+        mq_data.parse_header(line)
+        fh.puts "b/y-ion supported pos\tCorresponding scan numbers\t#{line}"
+        next
+    end
+    mq_data.parse_line(line)
 
     supported_pos, scannrs = get_corresponding_msms_data(mq_data, msms_data)
     additional_data = "#{supported_pos.join(";")}\t#{scannrs.join(";")}"
-    fh.puts "#{line}\t#{additional_data}"
+    fh.puts "#{additional_data}\t#{line}"
 end
 fh.close
 

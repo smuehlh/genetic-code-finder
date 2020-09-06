@@ -137,6 +137,7 @@ IO.foreach(options[:evidence]) do |line|
         next
     end
     mq_data.parse_line(line)
+    next if mq_data.is_decoy_match
 
     supported_pos, scannrs = get_corresponding_msms_data(mq_data, msms_data)
     additional_data = "#{supported_pos.join(";")}\t#{scannrs.join(";")}"

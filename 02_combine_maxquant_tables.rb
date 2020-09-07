@@ -8,6 +8,7 @@ require "optparse"
     Enrich evidence table
         - skip lines matching the decoy database (which MaxQuant automatically generates and searches against)
         - add information about b/y-ion support
+        - add original gene name (was simplified for DB creation)
 
     Args:
         evidence (str): path to input file (MaxQuant evidence.txt)
@@ -123,6 +124,16 @@ def read_msms(path)
     evids_with_msms_data
 end
 
+def read_gene_names_map(path)
+    map = {}
+    IO.foreach(path) do |line|
+        line = line.chomp
+        orig, _, patch = line.rpartition(",")
+        map[patch] = orig
+    end
+    map
+end
+
 def get_corresponding_msms_data(mq_data, evids_with_msms_data)
     evid = mq_data.get_evidenceid
     supported = evids_with_msms_data[evid][:supported] || []
@@ -131,22 +142,29 @@ def get_corresponding_msms_data(mq_data, evids_with_msms_data)
     [supported, scannrs]
 end
 
+def get_corresponding_original_genenames(mq_data, prots_with_orig_names)
+    prots_with_orig_names[mq_data.get_protein]
+end
+
 options = OptParser.parse(ARGV)
 msms_data = read_msms(options[:msms])
+proteins_with_original_names = read_gene_names_map(options[:map])
 
 fh = File.open(options[:output], "w")
 mq_data = ParseEvidence.new(options[:codon])
 IO.foreach(options[:evidence]) do |line|
     if mq_data.is_header
         mq_data.parse_header(line)
-        fh.puts "b/y-ion supported pos\tCorresponding scan numbers\t#{line}"
+        fh.puts "Original protein name\tb/y-ion supported pos\tCorresponding scan numbers\t#{line}"
         next
     end
     mq_data.parse_line(line)
     next if mq_data.is_decoy_match
 
     supported_pos, scannrs = get_corresponding_msms_data(mq_data, msms_data)
-    additional_data = "#{supported_pos.join(";")}\t#{scannrs.join(";")}"
+    original_names = get_corresponding_original_genenames(mq_data, proteins_with_original_names)
+
+    additional_data = "#{original_names}\t#{supported_pos.join(";")}\t#{scannrs.join(";")}"
     fh.puts "#{additional_data}\t#{line}"
 end
 fh.close

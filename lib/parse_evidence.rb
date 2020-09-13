@@ -27,7 +27,7 @@ class ParseEvidence
         split_line(line)
     end
 
-    def get_approximate_protein_region
+    def get_protein_region
         # the protein-region the peptide falls into. no exact peptide start-/stop-positions
         _, protein_data = split_matched_proteins
         [protein_data[:region_start], protein_data[:region_stop]]

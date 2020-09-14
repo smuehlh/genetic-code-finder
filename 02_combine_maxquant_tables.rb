@@ -83,7 +83,7 @@ class OptParser
                 options[:cdna] = path
             end
             opts.on("-o", "--output FILE",
-                "Path to output file, in FASTA format.") do |path|
+                "Path to output file, in TSV format.") do |path|
                 options[:output] = path
             end
 

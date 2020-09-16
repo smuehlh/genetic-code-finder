@@ -141,7 +141,7 @@ def read_gene_names_map(path)
     map = {}
     IO.foreach(path) do |line|
         line = line.chomp
-        orig, _, patch = line.rpartition(",")
+        orig, _, patch = line.rpartition(";")
         map[patch] = orig
     end
     map

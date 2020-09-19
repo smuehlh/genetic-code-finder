@@ -195,9 +195,9 @@ def get_codon_pos(codons, special_codon)
 end
 
 def get_corresponding_msms_data(mq_data, evids_with_msms_data)
-    evid = mq_data.get_evidenceid
-    supported = evids_with_msms_data[evid][:supported] || []
-    scannrs = evids_with_msms_data[evid][:scannrs] || []
+    msms = evids_with_msms_data[mq_data.get_evidenceid] || {}
+    supported = msms[:supported] || []
+    scannrs = msms[:scannrs] || []
 
     [supported, scannrs]
 end

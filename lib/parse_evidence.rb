@@ -71,12 +71,6 @@ class ParseEvidence
         @parsed_line[@ind_masserr].to_f
     end
 
-    def get_codon_pos(codon)
-        get_codons.each_with_index.collect do |this, ind|
-            ind if this == codon
-        end.compact
-    end
-
     private
 
     def split_line(line)

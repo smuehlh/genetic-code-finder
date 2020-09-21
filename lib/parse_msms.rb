@@ -14,7 +14,6 @@ class ParseMsms
         @is_headerline = false
 
         @ind_peptide = @parsed_line.index("Sequence")
-        @ind_protein = @parsed_line.index("Proteins")
         @ind_evidenceid = @parsed_line.index("Evidence ID")
         @ind_matched_ions = @parsed_line.index("Matches")
         @ind_scannumber = @parsed_line.index("Scan number")

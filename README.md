@@ -45,6 +45,9 @@ ruby test/01_create.rb # test 01_create_maxquant_db.rb
 ruby test/02_combine_tables.rb # test 02_combine_maxquant_tables.rb
 ```
 
+## Test data
+For playing around with this library, some sample data is provided. It is an excerpt of [ProteomeXchange](http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD009494-1&test=no), Clavispora processed data.
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 

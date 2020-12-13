@@ -26,8 +26,8 @@ A complete work flow will consist of the following steps
 This library contains scripts for each of the above mentioned steps, named in their order of execution.
 
 ```bash
-ruby 01_create_maxquant_db.rb -i sample_data/mockup_data/Clavispora_lusitaniae_mockup_cDNA.fasta -o Clavispora_lusitaniae_maxquant_db.fas -m Clavispora_lusitaniae_maxquant_db_map.csv -c CTG
-ruby 02_combine_maxquant_tables.rb -e sample_data/mockup_data/evidence.txt --msms sample_data/mockup_data/msms.txt --map Clavispora_lusitaniae_maxquant_db_map.csv --codon CTG --cdna sample_data/mockup_data/Clavispora_lusitaniae_mockup_cDNA.fasta -o Clavispora_lusitaniae_enriched_evidence.txt
+ruby 01_create_maxquant_db.rb -i sample_data/Clavispora_cDNA_excerpt.fasta -o Clavispora_maxquant_db.fas -m Clavispora_maxquant_db_map.csv -c CTG
+ruby 02_combine_maxquant_tables.rb -e sample_data/evidence.txt --msms sample_data/msms.txt --map Clavispora_maxquant_db_map.csv --codon CTG --cdna sample_data/Clavispora_cDNA_excerpt.fasta -o Clavispora_enriched_evidence.txt
 ```
 
 ## Test

@@ -50,6 +50,7 @@ class OptParser
         # mandatory parameters
         options[:input] = nil
         options[:output] = nil
+        options[:psm] = nil
         options[:codon] = nil
         options[:cdna] = nil
 
@@ -111,6 +112,7 @@ class OptParser
         abort "Missing mandatory argument: --codon" unless options[:codon]
         abort "Missing mandatory argument: --cdna" unless options[:cdna]
         abort "Missing mandatory argument: --output" unless options[:output]
+        abort "Missing mandatory argument: --psm" unless options[:psm]
 
         return options
     end

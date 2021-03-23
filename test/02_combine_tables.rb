@@ -23,9 +23,9 @@ orig_header = "EEQ37961 cdna supercontig:ASM383v1:CH408077:1767990:1769492:-1 ge
 mockup_data_map = Tempfile.new("gcf")
 mockup_data_map.write("#{orig_header};g1")
 mockup_data_map.close
-mockup_data_evidence = File.join(__dir__, "..", "sample_data", "mockup_data", "evidence.txt")
-mockup_data_msms = File.join(__dir__, "..", "sample_data", "mockup_data", "msms.txt")
-mockup_data_cdna = File.join(__dir__, "..", "sample_data", "mockup_data", "Clavispora_lusitaniae_mockup_cDNA.fasta")
+mockup_data_evidence = File.join(__dir__, "..", "sample_data", "evidence.txt")
+mockup_data_msms = File.join(__dir__, "..", "sample_data", "msms.txt")
+mockup_data_cdna = File.join(__dir__, "..", "sample_data", "Clavispora_cDNA_excerpt.fasta")
 output = Tempfile.new("gcf")
 
 original_stdout = $stdout.clone

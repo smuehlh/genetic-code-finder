@@ -35,29 +35,34 @@ system("ruby", File.join(__dir__, "..", "02_combine_maxquant_tables.rb"), "-e", 
 $stdout.reopen(original_stdout)
 
 ind_cdna, ind_ctg_pos, ind_orig_header, ind_msms = nil, nil, nil, nil
-is_first_line_after_header= false
+is_first_line = true
 
 IO.foreach(output.path) do |line|
     parts = line.split("\t")
-    is_first_line_after_header = false
-
-    if is_first_line_after_header
-        # peptide AAAALGAALAPQR
-        # contains one CTG at index 4
-        # corresponding Scan number is 8270
-        assert_equal "AAAALGAALAPQR", Sequence.translate(parts[ind_cdna])
-        assert_equal orig_header, parts[ind_orig_header]
-        assert_equal "4", parts[ind_ctg_pos]
-        assert_equal "8270", parts[ind_msms]
-    else
+    if is_first_line
         # header line
         ind_cdna = parts.index("cDNA")
         ind_ctg_pos = parts.index("Codon pos")
         ind_orig_header = parts.index("Original protein name")
         ind_msms = parts.index("Corresponding scan numbers")
-        is_first_line_after_header = true
+        is_first_line = false
+    else
+        # test first line after header
+        # peptide AAAALGAALAPQR
+        # contains one CTG at index 4
+        # corresponding Scan number is 8270
+        assert_true ind_cdna.is_a? Integer
+        assert_true ind_orig_header.is_a? Integer
+        assert_true ind_ctg_pos.is_a? Integer
+        assert_true ind_msms.is_a? Integer
+        assert_equal "AAAALGAALAPQR", Sequence.translate(parts[ind_cdna])
+        assert_equal orig_header, parts[ind_orig_header]
+        assert_equal "4", parts[ind_ctg_pos]
+        assert_equal "8270", parts[ind_msms]
+        break
     end
 end
+assert_false is_first_line
 
 mockup_data_map.unlink
 output.unlink

@@ -8,9 +8,9 @@ require "tempfile"
 
         - Input: mockup data
         - expected output:
-            -
+            - plain text file with overall counts and counts per translation
+            - PSM file
 
-        TODO
 =end
 
 # require .rb files in library (including all subfolders)
@@ -41,53 +41,42 @@ require "byebug"
 is_first_line = true
 is_translation_part = false
 IO.foreach(output.path) do |line|
-    desc, val = line.split(":")
-    # debugger
-    # puts "??"
+    line = line.chomp
+    desc, val = line.split(": ")
+
     if is_first_line
         assert_equal "Total number of PSMs", desc
-        # assert_equal "1", val
+        assert_equal "1", val
         is_first_line = false
     end
 
-    # # translation table sub-part of file
-    # if is_translation_part
-    #     # either serine line or all 0 lines
-    #     if desc.starts_with?("S")
-    #         assert_equal "S 1   1   1   0", desc
-    #     else
-    #         assert_match /[A-Z\/](\t0){4}/, desc
-    #     end
-    # end
-    # if desc.starts_with?("Translation")
-    #     is_translation_part
-    # end
-end
-# assert_true is_translation_part # should have seen translation part in file
-
-ind_psm, ind_masserr, ind_transl, ind_flag = nil, nil, nil, nil
-is_first_line_after_header = false
-IO.foreach(output.path) do |line|
-    parts = line.split(",")
-    is_first_line_after_header = false
-
-    if is_first_line_after_header
-        # assert equals on first line.
-        assert_equal "AAAASGAALAPQR", parts[ind_psm]
-        assert_equal "0.49364", parts[ind_masserr]
-        assert_equal "S", parts[ind_transl]
-        debugger
-        puts "??"
-        assert_equal "true", parts[ind_flag]
-    else
-        # header line
-        ind_psm = parts.index("PSM")
-        ind_masserr = parts.index("Mass error [ppm]")
-        ind_transl = parts.index("CTG translation(s)")
-        ind_flag = parts.index("Has b/y supported CTG position?")
-        is_first_line_after_header = true
+    # translation table sub-part of file
+    if is_translation_part
+        # either serine line or all 0 lines
+        if line.start_with?("S")
+            assert_equal "S\t1\t1\t1\t0", line
+        else
+            assert_match /[A-Z\/]\t0\t0\t0\t0/, line
+        end
+    end
+    if line.start_with?("Translation")
+        is_translation_part = true
     end
 end
+assert_true is_translation_part # should have seen translation part in file
+
+is_first_line = true
+IO.foreach(output_psms.path) do |line|
+    line = line.chomp
+    if is_first_line
+        assert_equal "PSM,Mass error [ppm],CTG translation(s),Has b/y supported CTG position?", line
+        is_first_line = false
+    else
+        # there should be only one more line
+        assert_equal "AAAASGAALAPQR,0.49364,S,true", line
+    end
+end
+assert_false is_first_line
 
 mockup_data_enriched_evidence.unlink
 output.unlink

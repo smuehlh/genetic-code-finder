@@ -1,5 +1,4 @@
 # !/usr/bin/env ruby
-require "byebug"
 require "optparse"
 
 =begin
@@ -57,7 +56,7 @@ class OptParser
         opt_parser = OptionParser.new do |opts|
             opts.banner = "Make statistics about codon translation."
             opts.separator ""
-            opts.separator "Copyright (c) 2020, by Göttingen University"
+            opts.separator "Copyright (c) 2020-2021, by Göttingen University"
             opts.separator "Author: Stefanie Mühlhausen"
             opts.separator "This program comes with ABSOLUTELY NO WARRANTY"
 

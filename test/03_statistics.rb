@@ -35,9 +35,6 @@ $stdout.reopen(File.new('/dev/null', 'w'))
 system("ruby", File.join(__dir__, "..", "03_make_statistics.rb"), "-i", mockup_data_enriched_evidence.path, "--cdna", mockup_data_cdna, "-o", output.path, "-p", output_psms.path, "--codon", "CTG")
 $stdout.reopen(original_stdout)
 
-
-require "byebug"
-
 is_first_line = true
 is_translation_part = false
 IO.foreach(output.path) do |line|

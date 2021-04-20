@@ -4,7 +4,7 @@ include Test::Unit::Assertions
 require "tempfile"
 
 =begin
-    Test lib/parse_evidence.rb:
+    Test lib/parse_msms.rb:
 
         - parse header and subsequent lines
         - parse evidenceid

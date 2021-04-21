@@ -15,7 +15,7 @@ require "optparse"
     Args:
         evidence (str): path to input file (MaxQuant evidence.txt)
         msms (str): path to input file (MaxQuant msms.txt)
-        map (str): path to input file (mapping between original and shortened FASTA headers)
+        map (str): path to input file (mapping between original and shortened FASTA headers; output of script 01_create_maxquant_dbs)
         output (str): path to output TSV (enriched evidence file)
         cdna (str): path input FASTA (cDNA sequences; used as input for 01_create_maxquant_dbs)
         codon (str): optional argument; if present codon other than CTG has been translated by script 01_create_maxquant_dbs into each amino acid
@@ -56,18 +56,18 @@ class OptParser
             opts.separator "Usage: ruby #{File.basename($PROGRAM_NAME)} -e evidence -m msms --map dict -c cdna -o output"
 
             opts.on("-e", "--evidence FILE",
-                "Path to input file evidence.txt.") do |path|
+                "Path to input file evidence.txt (MaxQuant table).") do |path|
                 FileHelper.file_exist_or_die(path)
                 options[:evidence] = path
             end
             opts.on("-m", "--msms FILE",
-                "Path to input file msms.txt.") do |path|
+                "Path to input file msms.txt (MaxQuant table).") do |path|
                 FileHelper.file_exist_or_die(path)
                 options[:msms] = path
             end
             opts.on("--map FILE",
                 "Path to input file mapping original ",
-                "to shortened FASTA headers.") do |path|
+                "to shortened FASTA headers (output of 01_create_maxquant_dbs).") do |path|
                 options[:map] = path
             end
             opts.on("-c", "--cdna FILE",

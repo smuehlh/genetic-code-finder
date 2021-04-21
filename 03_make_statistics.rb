@@ -25,7 +25,7 @@ require "optparse"
     Retrieve designated <codon> from enriched evidence file, it should be noted there in header as "<codon> codon pos".
 
     Args:
-        input (str): path to input file (enriched evidence file; output from script 02_combine_maxquant_tables)
+        input (str): path to input file (enriched evidence file; output of script 02_combine_maxquant_tables)
         cdna (str): path input FASTA (cDNA sequences; used as input for 01_create_maxquant_dbs)
         output (str): path to output TXT (statistics described above)
         psm (str): path to output CSV (PSM subset for generating plots)
@@ -63,7 +63,8 @@ class OptParser
             opts.separator "Usage: ruby #{File.basename($PROGRAM_NAME)} -i combined-evidence-msms -c cdna -o stats-output -p psm-output"
 
             opts.on("-i", "--input FILE",
-                "Path to combinded MaxQuant tables.") do |path|
+                "Path to input file enriched evidence",
+                "(output of 02_combine_maxquant_tables).") do |path|
                 FileHelper.file_exist_or_die(path)
                 options[:input] = path
             end

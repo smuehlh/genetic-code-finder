@@ -25,10 +25,10 @@ require "optparse"
 
     Args:
         input (str): path to input file (enriched evidence file; output from script 02_combine_maxquant_tables)
-        codon (str): codon translated by script 01_create_maxquant_dbs into each amino acid
         cdna (str): path input FASTA (cDNA sequences; used as input for 01_create_maxquant_dbs)
         output (str): path to output TXT (statistics described above)
         psm (str): path to output CSV (PSM subset for generating plots)
+        codon (str): optional argument; if present codon other than CTG has been translated by script 01_create_maxquant_dbs into each amino acid
 
     Returns
         statistics about the dataset in plain text
@@ -50,8 +50,10 @@ class OptParser
         options[:input] = nil
         options[:output] = nil
         options[:psm] = nil
-        options[:codon] = nil
         options[:cdna] = nil
+
+        # optional parameters
+        options[:codon] = "CTG"
 
         opt_parser = OptionParser.new do |opts|
             opts.banner = "Make statistics about codon translation."
@@ -61,21 +63,14 @@ class OptParser
             opts.separator "This program comes with ABSOLUTELY NO WARRANTY"
 
             opts.separator ""
-            opts.separator "Usage: ruby #{File.basename($PROGRAM_NAME)} -i combined-evidence-msms -o output --codon codon --cdna cdna"
+            opts.separator "Usage: ruby #{File.basename($PROGRAM_NAME)} -i combined-evidence-msms -c cdna -o stats-output -p psm-output"
 
             opts.on("-i", "--input FILE",
                 "Path to combinded MaxQuant tables.") do |path|
                 FileHelper.file_exist_or_die(path)
                 options[:input] = path
             end
-            opts.on("--codon CODON",
-            "Codon translated into all amino acids." ) do |codon|
-                options[:codon] = codon
-                unless Sequence.codons.include?(codon)
-                    abort "#{codon} not a valid codon."
-                end
-            end
-            opts.on("--cdna FILE",
+            opts.on("-c", "--cdna FILE",
                 "Path to cDNA file (input to 01_create_maxquant_dbs), ",
                 "in FASTA format.") do |path|
                 FileHelper.file_exist_or_die(path)
@@ -89,6 +84,14 @@ class OptParser
                 "Path to auxiliary output file containing non-decoy PSM and ",
                 "selected information, in CSV format.") do |path|
                 options[:psm] = path
+            end
+            opts.on("--codon CODON",
+            "Optional, specify if codon other than CTG was translated into ",
+            "all amino acids (set in 01_create_maxquant_dbs)." ) do |codon|
+                options[:codon] = codon
+                unless Sequence.codons.include?(codon)
+                    abort "#{codon} not a valid codon."
+                end
             end
 
             opts.separator ""
@@ -108,10 +111,13 @@ class OptParser
 
         # ensure mandatory arguments are present
         abort "Missing mandatory argument: --input" unless options[:input]
-        abort "Missing mandatory argument: --codon" unless options[:codon]
         abort "Missing mandatory argument: --cdna" unless options[:cdna]
         abort "Missing mandatory argument: --output" unless options[:output]
         abort "Missing mandatory argument: --psm" unless options[:psm]
+
+        unless options[:codon] == "CTG"
+            puts "INFO - assuming DB was prepared for codon #{options[:codon]}"
+        end
 
         return options
     end

@@ -15,7 +15,7 @@ require "optparse"
         input (str): path input FASTA (cDNA sequences)
         output (str): path to output FASTA (protein sequences)
         map (str): path to output CSV (dictionary of simplified gene names)
-        codon (str): codon to translate into each amino acid
+        codon (str): optional argument; if present codon other than CTG will be translated into each amino acid
         ile: optional argument; if present codon will be translated into both
             Ile and Leu
         cleavage (array): optional argument; amino acids to cleave at
@@ -40,9 +40,9 @@ class OptParser
         options[:input] = nil
         options[:output] = nil
         options[:map] = nil
-        options[:codon] = nil
 
         # optional parameters
+        options[:codon] = "CTG"
         options[:omit_ile] = true
         options[:cleavage] = ["K", "R"]
 
@@ -54,7 +54,7 @@ class OptParser
             opts.separator "This program comes with ABSOLUTELY NO WARRANTY"
 
             opts.separator ""
-            opts.separator "Usage: ruby #{File.basename($PROGRAM_NAME)} -i input -o output -m dict -c codon"
+            opts.separator "Usage: ruby #{File.basename($PROGRAM_NAME)} -i input -o output -m dict"
 
             opts.on("-i", "--input FILE",
                 "Path to input file, in FASTA format.") do |path|
@@ -70,8 +70,8 @@ class OptParser
                 "to shortened FASTA headers, in CSV format.") do |path|
                 options[:map] = path
             end
-            opts.on("-c", "--codon CODON",
-            "Codon to translate into all amino acids." ) do |codon|
+            opts.on("--codon CODON",
+            "Optional, specify to translate codon other than CTG into all amino acids." ) do |codon|
                 options[:codon] = codon
                 unless Sequence.codons.include?(codon)
                     abort "#{codon} not a valid codon."
@@ -110,7 +110,6 @@ class OptParser
         abort "Missing mandatory argument: --input" unless options[:input]
         abort "Missing mandatory argument: --output" unless options[:output]
         abort "Missing mandatory argument: --map" unless options[:map]
-        abort "Missing mandatory argument: --codon" unless options[:codon]
 
         if options[:omit_ile]
             puts "INFO - do not translate #{options[:codon]} into Ile (recommended)"
@@ -118,6 +117,7 @@ class OptParser
             puts "INFO - translate #{options[:codon]} into both Ile and Leu (not recommended)"
         end
         puts "INFO - prepare DB for cleavage after #{options[:cleavage].join(",")}"
+        puts "INFO - prepare DB for codon #{options[:codon]}"
         return options
     end
 end

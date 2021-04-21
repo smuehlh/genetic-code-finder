@@ -32,7 +32,7 @@ output_psms = Tempfile.new("gcf")
 original_stdout = $stdout.clone
 $stdout.reopen(File.new('/dev/null', 'w'))
 
-system("ruby", File.join(__dir__, "..", "03_make_statistics.rb"), "-i", mockup_data_enriched_evidence.path, "--cdna", mockup_data_cdna, "-o", output.path, "-p", output_psms.path, "--codon", "CTG")
+system("ruby", File.join(__dir__, "..", "03_make_statistics.rb"), "-i", mockup_data_enriched_evidence.path, "-c", mockup_data_cdna, "-o", output.path, "-p", output_psms.path)
 $stdout.reopen(original_stdout)
 
 is_first_line = true

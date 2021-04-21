@@ -31,7 +31,7 @@ output = Tempfile.new("gcf")
 original_stdout = $stdout.clone
 $stdout.reopen(File.new('/dev/null', 'w'))
 
-system("ruby", File.join(__dir__, "..", "02_combine_maxquant_tables.rb"), "-e", mockup_data_evidence, "--msms", mockup_data_msms, "--cdna", mockup_data_cdna, "--map", mockup_data_map.path, "-o", output.path, "--codon", "CTG")
+system("ruby", File.join(__dir__, "..", "02_combine_maxquant_tables.rb"), "-e", mockup_data_evidence, "--msms", mockup_data_msms, "--cdna", mockup_data_cdna, "--map", mockup_data_map.path, "-o", output.path)
 $stdout.reopen(original_stdout)
 
 ind_cdna, ind_ctg_pos, ind_orig_header, ind_msms = nil, nil, nil, nil

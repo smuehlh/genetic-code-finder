@@ -31,7 +31,7 @@ output_csv = Tempfile.new("gcf")
 
 original_stdout = $stdout.clone
 $stdout.reopen(File.new('/dev/null', 'w'))
-system("ruby", File.join(__dir__, "..", "01_create_maxquant_db.rb"), "-i", input.path, "-o", output.path, "-m", output_csv.path, "-c", "CTG")
+system("ruby", File.join(__dir__, "..", "01_create_maxquant_db.rb"), "-i", input.path, "-o", output.path, "-m", output_csv.path)
 $stdout.reopen(original_stdout)
 
 # sequence for MaxQuant DB

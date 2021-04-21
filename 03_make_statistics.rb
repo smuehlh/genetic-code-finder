@@ -22,13 +22,13 @@ require "optparse"
 
     <Codon> counts are based on those PSMs where <codon> position is supported by b/y-ion fragments. General counts such as total number of PSMs are not, as b/y support gets meaningless when inspecting the PSM as a whole (each PSM has at least one supported position by definition).
 
+    Retrieve designated <codon> from enriched evidence file, it should be noted there in header as "<codon> codon pos".
 
     Args:
         input (str): path to input file (enriched evidence file; output from script 02_combine_maxquant_tables)
         cdna (str): path input FASTA (cDNA sequences; used as input for 01_create_maxquant_dbs)
         output (str): path to output TXT (statistics described above)
         psm (str): path to output CSV (PSM subset for generating plots)
-        codon (str): optional argument; if present codon other than CTG has been translated by script 01_create_maxquant_dbs into each amino acid
 
     Returns
         statistics about the dataset in plain text
@@ -51,9 +51,6 @@ class OptParser
         options[:output] = nil
         options[:psm] = nil
         options[:cdna] = nil
-
-        # optional parameters
-        options[:codon] = "CTG"
 
         opt_parser = OptionParser.new do |opts|
             opts.banner = "Make statistics about codon translation."
@@ -85,14 +82,6 @@ class OptParser
                 "selected information, in CSV format.") do |path|
                 options[:psm] = path
             end
-            opts.on("--codon CODON",
-            "Optional, specify if codon other than CTG was translated into ",
-            "all amino acids (set in 01_create_maxquant_dbs)." ) do |codon|
-                options[:codon] = codon
-                unless Sequence.codons.include?(codon)
-                    abort "#{codon} not a valid codon."
-                end
-            end
 
             opts.separator ""
             opts.on_tail("-h", "--help", "Show this message") do
@@ -115,15 +104,20 @@ class OptParser
         abort "Missing mandatory argument: --output" unless options[:output]
         abort "Missing mandatory argument: --psm" unless options[:psm]
 
-        unless options[:codon] == "CTG"
-            puts "INFO - assuming DB was prepared for codon #{options[:codon]}"
-        end
-
         return options
     end
 end
 
+def get_codon_db_was_prepared_for(path)
+    codon = ParseEnrichedEvidence.codon_used_for_db_preparation(path)
+    unless Sequence.codons.include?(codon)
+        abort "Codon uses as basis for DB (#{codon}) not a valid codon."
+    end
+    codon
+end
+
 options = OptParser.parse(ARGV)
+designated_codon = get_codon_db_was_prepared_for(options[:input])
 
 # read in cDNA as reference
 all_prots, all_seqs = Sequence.read_fasta(options[:cdna])
@@ -134,7 +128,7 @@ all_prots.each_with_index do |prot, ind|
     codons = Sequence.split_cdna_into_codons(seq)
 
     codons.each_with_index do |codon, ind|
-        if codon == options[:codon]
+        if codon == designated_codon
             # collect codon position and protein
             key = prot + "-" + ind.to_s
             all_codon_pos.push(key)
@@ -159,8 +153,8 @@ protein_subset_with_codon = []
 codon_pos = {} # keys: codon positions, values: number of PSMs per position
 
 fh_psms = File.open(options[:psm], "w")
-fh_psms.puts "PSM,Mass error [ppm],#{options[:codon]} translation(s),Has b/y supported #{options[:codon]} position?"
-mq_data = ParseEnrichedEvidence.new(options[:codon])
+fh_psms.puts "PSM,Mass error [ppm],#{designated_codon} translation(s),Has b/y supported #{designated_codon} position?"
+mq_data = ParseEnrichedEvidence.new()
 IO.foreach(options[:input]) do |line|
     if mq_data.is_header
         mq_data.parse_header(line)
@@ -228,45 +222,45 @@ fh_stats.print "Percentage of identified proteins: "
 fh_stats.print Statistics.percentage(proteins.uniq.size, all_prots.size).round(2).to_s + "\n"
 fh_stats.puts ""
 
-fh_stats.puts "The following counts are based on those PSMs where #{options[:codon]} "
+fh_stats.puts "The following counts are based on those PSMs where #{designated_codon} "
 fh_stats.puts "position is supported by b/y-type ions"
 fh_stats.puts ""
 
-fh_stats.print "Total number of PSMs containing #{options[:codon]}: "
+fh_stats.print "Total number of PSMs containing #{designated_codon}: "
 fh_stats.print psm_subset_with_codon.size.to_s + "\n"
 
-fh_stats.print "Total number of non-redundant peptides containing #{options[:codon]}: "
+fh_stats.print "Total number of non-redundant peptides containing #{designated_codon}: "
 fh_stats.print psm_subset_with_codon.uniq.size.to_s + "\n"
 
-fh_stats.print "Mass error (mean / median) of PSMs containing #{options[:codon]}: "
+fh_stats.print "Mass error (mean / median) of PSMs containing #{designated_codon}: "
 fh_stats.print Statistics.mean(mass_error_subset_with_codon).round(4).to_s + " / "
 fh_stats.print Statistics.median(mass_error_subset_with_codon).round(4).to_s + "\n"
 
-fh_stats.print "Number of identified proteins containing #{options[:codon]}: "
+fh_stats.print "Number of identified proteins containing #{designated_codon}: "
 fh_stats.print protein_subset_with_codon.uniq.size.to_s + "\n"
 
-fh_stats.print "Percentage of identified proteins containing #{options[:codon]}: "
+fh_stats.print "Percentage of identified proteins containing #{designated_codon}: "
 fh_stats.print Statistics.percentage(protein_subset_with_codon.uniq.size, all_protein_subset_with_codon.size).round(2).to_s + "\n"
 fh_stats.puts ""
 
-fh_stats.print "Number of #{options[:codon]} positions covered by PSMs: "
+fh_stats.print "Number of #{designated_codon} positions covered by PSMs: "
 fh_stats.print codon_pos.keys.uniq.size.to_s + "\n"
 
-fh_stats.print "Total number of #{options[:codon]} positions: "
+fh_stats.print "Total number of #{designated_codon} positions: "
 fh_stats.print all_codon_pos.size.to_s + "\n"
 
-fh_stats.print "Percentage of recovered #{options[:codon]} positions: "
+fh_stats.print "Percentage of recovered #{designated_codon} positions: "
 fh_stats.print Statistics.percentage(codon_pos.keys.uniq.size, all_codon_pos.size).round(2).to_s + "\n"
 fh_stats.puts ""
 
-fh_stats.print "Number of PSMs per recovered #{options[:codon]} position (mean / median): "
+fh_stats.print "Number of PSMs per recovered #{designated_codon} position (mean / median): "
 psms_per_pos = codon_pos.collect{|_,v| v.values.flatten.size}
 fh_stats.print Statistics.mean(psms_per_pos).round(4).to_s + " / "
 fh_stats.print Statistics.median(psms_per_pos).round(4).to_s + "\n"
 fh_stats.puts ""
 
 fh_stats.puts "The following counts are broken down to individual translations"
-fh_stats.puts ["Translation", "#PSMs", "# non-redundant peptides", "#{options["codon"]} positions", "#{options["codon"]} positions found with additional translations"].join("\t")
+fh_stats.puts ["Translation", "#PSMs", "# non-redundant peptides", "#{designated_codon} positions", "#{designated_codon} positions found with additional translations"].join("\t")
 Sequence.amino_acids.each do |aa|
     if aa == "I"
         # skip as isoleucine and leucine can't be discriminated

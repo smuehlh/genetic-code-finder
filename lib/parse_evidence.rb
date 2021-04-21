@@ -1,9 +1,8 @@
 class ParseEvidence
 
-    def initialize(codon = "CTG")
+    def initialize
         @parsed_line = []
         @is_headerline = true
-        @codon = codon
     end
 
     def is_header

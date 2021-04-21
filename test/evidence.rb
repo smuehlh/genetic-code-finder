@@ -26,7 +26,7 @@ decoy2 = "AEANLAANK\t9\tUnmodified\t_AEANLAANK_\t\t\t0\t0\t0\t\tREV__g5027_0_101
 line = "AAAASGAALAPQR\t13\tUnmodified\t_AAAASGAALAPQR_\t\t\t0\t0\t0\tg1_102_127-CTG-S\tg1_102_127-CTG-S\tg1_102_127-CTG-S\tMULTI-MSMS\tH_Schmitt_211216_190117_L1_R1_14\t14\tL1\t5.778.184\t2\t577.817.461\t115.362.037\t42112.35\t-0.42427\t-0.00024515\t0.91792\t0.00053039\t0.49364\t0.00028524\t577.818.033.203.664\t16.334\t0.21083\t16.472\t16.339\t16.549\t0.13784\t\t\t\t\t62\t35\t2\t0\t0\t0\t1,28E-04\t1\t8270\t116.24\t99.661\t1\t16324000\t\t\t63\t1435\t11\t11\t51\t51\t\t"
 
 
-mq_data = ParseEvidence.new("CTG")
+mq_data = ParseEvidence.new()
 
 # ParseEvidence.is_header & parse_line
 # - treat (only) first line as header line

@@ -215,16 +215,22 @@ proteins_with_original_names = read_gene_names_map(options[:map])
 headers, seqs = Sequence.read_fasta(options[:cdna])
 
 fh = File.open(options[:output], "w")
-mq_data = ParseEvidence.new(options[:codon])
+mq_data = ParseEvidence.new()
 IO.foreach(options[:evidence]) do |line|
     if mq_data.is_header
         mq_data.parse_header(line)
 
-        fh.puts "cDNA\tStart pos in protein\tEnd pos in protein\tCodon pos\tOriginal protein name\tb/y-ion supported pos\tCorresponding scan numbers\t#{line}"
+        fh.puts "cDNA\tStart pos in protein\tEnd pos in protein\t#{options[:codon]} codon pos\tOriginal protein name\tb/y-ion supported pos\tCorresponding scan numbers\t#{line}"
         next
     end
     mq_data.parse_line(line)
     next if mq_data.is_decoy_match
+
+    # ensure database and assumend database foundation (codon) match
+    codon,_ = mq_data.get_codon_transl_applied_to_protein
+    if codon && codon != options[:codon]
+        abort "Invalid optional argument: DB and codon reported as basis for DB do not match"
+    end
 
     # map to MSMS data
     supported_pos, scannrs = get_corresponding_msms_data(mq_data, msms_data)

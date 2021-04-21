@@ -42,7 +42,7 @@ IO.foreach(output.path) do |line|
     if is_first_line
         # header line
         ind_cdna = parts.index("cDNA")
-        ind_ctg_pos = parts.index("Codon pos")
+        ind_ctg_pos = parts.index("CTG codon pos")
         ind_orig_header = parts.index("Original protein name")
         ind_msms = parts.index("Corresponding scan numbers")
         is_first_line = false

@@ -24,6 +24,8 @@ require "optparse"
 
     Retrieve designated <codon> from enriched evidence file, it should be noted there in header as "<codon> codon pos".
 
+    To plot found translations, call Rscript 03_plot_translation.R on statistical output.
+
     Args:
         input (str): path to input file (enriched evidence file; output of script 02_combine_maxquant_tables)
         cdna (str): path input FASTA (cDNA sequences; used as input for 01_create_maxquant_dbs)

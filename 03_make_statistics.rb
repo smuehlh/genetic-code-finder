@@ -124,36 +124,42 @@ designated_codon = get_codon_db_was_prepared_for(options[:input])
 
 # read in cDNA as reference
 all_prots, all_seqs = Sequence.read_fasta(options[:cdna])
-all_protein_subset_with_codon = []
-all_codon_pos = [] # values: protein-pos
+proteins_with_coverage_data = {}
+total_num_prots_with_codon = 0 # all proteins with designated codon
+total_num_codon_pos = 0 # total number of codon positions
 all_prots.each_with_index do |prot, ind|
     seq = all_seqs[ind]
     codons = Sequence.split_cdna_into_codons(seq)
 
+    proteins_with_coverage_data[prot] = {
+        len: codons.size,  # total length
+        covered_pos: [], # found positions, any support
+        codon_pos: [], # total codon pos
+        b_y_covered_codon_pos: [], # found codon pos, only b/y supported
+    }
     codons.each_with_index do |codon, ind|
         if codon == designated_codon
-            # collect codon position and protein
-            key = prot + "-" + ind.to_s
-            all_codon_pos.push(key)
-
-            all_protein_subset_with_codon.push(prot)
+            # collect codon position
+            total_num_codon_pos += 1
+            proteins_with_coverage_data[prot][:codon_pos].push(ind)
         end
     end
-
+    if proteins_with_coverage_data[prot][:codon_pos].any?
+        total_num_prots_with_codon += 1
+    end
 end
-all_protein_subset_with_codon = all_protein_subset_with_codon.uniq
 
 # collect MaxQuant data
 # counts for all PSMs/ proteins, irrepective if they contain codon or not
 psms = [] #  reduce to unique values for non-redundant peptide count
 mass_errors = []
-proteins = []
-# counts for PSMs/proteins with codon only
+proteins = [] # found proteins, to be made unique later
+# counts for PSMs/proteins with codon only, codon pos must be b/y supported
 # NOTE - can't use codon_pos to derive PSM counts, as PSM might contain more than one codon pos
 psm_subset_with_codon = []
 mass_error_subset_with_codon = []
-protein_subset_with_codon = []
-codon_pos = {} # keys: codon positions, values: number of PSMs per position
+protein_subset_with_codon = [] # found proteins with designated codon, to be made uniq later
+codon_transl = {} # keys: codon positions, values: PSMs per translation
 
 fh_psms = File.open(options[:psm], "w")
 fh_psms.puts "PSM,Mass error [ppm],#{designated_codon} translation(s),Has b/y supported #{designated_codon} position?"
@@ -171,6 +177,8 @@ IO.foreach(options[:input]) do |line|
     unless mq_data.is_masserr_unspecified?
         mass_errors.push(mq_data.get_masserr)
     end
+    proteins_with_coverage_data[mq_data.get_protein][:covered_pos].push(
+        (mq_data.get_peptide_start..mq_data.get_peptide_stop).to_a)
 
     found_translations = []
     has_supported_codon_pos = false
@@ -184,15 +192,17 @@ IO.foreach(options[:input]) do |line|
         end
         (mq_data.get_supported_pos && mq_data.get_codon_pos).each do |pos|
             pos_in_prot = mq_data.convert_peptide_to_protein_pos(pos)
+            proteins_with_coverage_data[mq_data.get_protein][:b_y_covered_codon_pos].push([pos_in_prot])
+
             key = mq_data.get_protein_name_used_in_db + "-" + pos_in_prot.to_s
             transl = mq_data.get_peptide[pos]
-            unless codon_pos[key]
-                codon_pos[key] = {}
+            unless codon_transl[key]
+                codon_transl[key] = {}
             end
-            unless codon_pos[key][transl]
-                codon_pos[key][transl] = []
+            unless codon_transl[key][transl]
+                codon_transl[key][transl] = []
             end
-            codon_pos[key][transl].push(mq_data.get_peptide)
+            codon_transl[key][transl].push(mq_data.get_peptide)
 
             found_translations.push(transl)
         end
@@ -206,6 +216,12 @@ IO.foreach(options[:input]) do |line|
     fh_psms.print "#{has_supported_codon_pos}\n"
 end
 
+# covert values as needed for fast and efficient output
+proteins = proteins.uniq
+protein_subset_with_codon = protein_subset_with_codon.uniq
+num_covered_pos = codon_transl.keys.uniq.size
+
+# write statistics output
 fh_stats = File.open(options[:output], "w")
 
 fh_stats.print "Total number of PSMs: "
@@ -219,10 +235,10 @@ fh_stats.print Statistics.mean(mass_errors).round(4).to_s + " / "
 fh_stats.print Statistics.median(mass_errors).round(4).to_s + "\n"
 
 fh_stats.print "Number of identified proteins: "
-fh_stats.print proteins.uniq.size.to_s + "\n"
+fh_stats.print proteins.size.to_s + "\n"
 
 fh_stats.print "Percentage of identified proteins: "
-fh_stats.print Statistics.percentage(proteins.uniq.size, all_prots.size).round(2).to_s + "\n"
+fh_stats.print Statistics.percentage(proteins.size, all_prots.size).round(2).to_s + "\n"
 fh_stats.puts ""
 
 fh_stats.puts "The following counts are based on those PSMs where #{designated_codon} "
@@ -240,24 +256,24 @@ fh_stats.print Statistics.mean(mass_error_subset_with_codon).round(4).to_s + " /
 fh_stats.print Statistics.median(mass_error_subset_with_codon).round(4).to_s + "\n"
 
 fh_stats.print "Number of identified proteins containing #{designated_codon}: "
-fh_stats.print protein_subset_with_codon.uniq.size.to_s + "\n"
+fh_stats.print protein_subset_with_codon.size.to_s + "\n"
 
 fh_stats.print "Percentage of identified proteins containing #{designated_codon}: "
-fh_stats.print Statistics.percentage(protein_subset_with_codon.uniq.size, all_protein_subset_with_codon.size).round(2).to_s + "\n"
+fh_stats.print Statistics.percentage(protein_subset_with_codon.size, total_num_prots_with_codon).round(2).to_s + "\n"
 fh_stats.puts ""
 
 fh_stats.print "Number of #{designated_codon} positions covered by PSMs: "
-fh_stats.print codon_pos.keys.uniq.size.to_s + "\n"
+fh_stats.print num_covered_pos.to_s + "\n"
 
 fh_stats.print "Total number of #{designated_codon} positions: "
-fh_stats.print all_codon_pos.size.to_s + "\n"
+fh_stats.print total_num_codon_pos.to_s + "\n"
 
 fh_stats.print "Percentage of recovered #{designated_codon} positions: "
-fh_stats.print Statistics.percentage(codon_pos.keys.uniq.size, all_codon_pos.size).round(2).to_s + "\n"
+fh_stats.print Statistics.percentage(num_covered_pos, total_num_codon_pos).round(2).to_s + "\n"
 fh_stats.puts ""
 
 fh_stats.print "Number of PSMs per recovered #{designated_codon} position (mean / median): "
-psms_per_pos = codon_pos.collect{|_,v| v.values.flatten.size}
+psms_per_pos = codon_transl.collect{|_,v| v.values.flatten.size}
 fh_stats.print Statistics.mean(psms_per_pos).round(4).to_s + " / "
 fh_stats.print Statistics.median(psms_per_pos).round(4).to_s + "\n"
 fh_stats.puts ""
@@ -273,7 +289,7 @@ Sequence.amino_acids.each do |aa|
     n_peptides = 0
     n_pos = 0
     n_ambig_transl_pos = 0
-    codon_pos.each do |key, val|
+    codon_transl.each do |key, val|
         n_psms += val[aa].to_a.size # number of PSMs
         n_peptides += val[aa].to_a.uniq.size # number of non-redundant peptides
         if val[aa].to_a.size > 0

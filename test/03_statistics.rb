@@ -10,6 +10,7 @@ require "tempfile"
         - expected output:
             - plain text file with overall counts and counts per translation
             - PSM file
+            - genes file with counts per gene
 
 =end
 
@@ -28,11 +29,12 @@ mockup_data_enriched_evidence.close
 mockup_data_cdna = File.join(__dir__, "..", "sample_data", "Clavispora_cDNA_excerpt.fasta")
 output = Tempfile.new("gcf")
 output_psms = Tempfile.new("gcf")
+output_genes = Tempfile.new("gcf")
 
 original_stdout = $stdout.clone
 $stdout.reopen(File.new('/dev/null', 'w'))
 
-system("ruby", File.join(__dir__, "..", "03_make_statistics.rb"), "-i", mockup_data_enriched_evidence.path, "-c", mockup_data_cdna, "-o", output.path, "-p", output_psms.path)
+system("ruby", File.join(__dir__, "..", "03_make_statistics.rb"), "-i", mockup_data_enriched_evidence.path, "-c", mockup_data_cdna, "-o", output.path, "-p", output_psms.path, "-g", output_genes.path)
 $stdout.reopen(original_stdout)
 
 is_first_line = true
@@ -75,6 +77,20 @@ IO.foreach(output_psms.path) do |line|
 end
 assert_false is_first_line
 
+is_first_line = true
+IO.foreach(output_genes.path) do |line|
+    line = line.chomp
+    if is_first_line
+        is_first_line = false
+        assert_equal "Gene,Sequence coverage [%],#PSMs,#non-redundant peptides,#PSMs containing CTG,CTG coverage [%]", line
+    else
+        # there should be only one more line
+        assert_equal "g1,2.5948103792415167,1,1,1,14.285714285714285", line
+    end
+end
+assert_false is_first_line
+
 mockup_data_enriched_evidence.unlink
 output.unlink
 output_psms.unlink
+output_genes.unlink

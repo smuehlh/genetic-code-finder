@@ -20,6 +20,13 @@ require "optparse"
         - number of <codon> positions translated into this amino acid
         - number of <codon> positions translated into this and another amino acid (= ambiguous translation)
 
+        Counts per gene:
+        - sequence coverage
+        - number of PSMs
+        - number of non-redundant peptides
+        - number of PSMs with <codon>
+        - <codon> coverage
+
     <Codon> counts are based on those PSMs where <codon> position is supported by b/y-ion fragments. General counts such as total number of PSMs are not, as b/y support gets meaningless when inspecting the PSM as a whole (each PSM has at least one supported position by definition).
 
     Retrieve designated <codon> from enriched evidence file, it should be noted there in header as "<codon> codon pos".
@@ -31,9 +38,11 @@ require "optparse"
         cdna (str): path input FASTA (cDNA sequences; used as input for 01_create_maxquant_dbs)
         output (str): path to output TXT (statistics described above)
         psm (str): path to output CSV (PSM subset for generating plots)
+        genes (str): path to output CSV (gene statistics described above)
 
     Returns
         statistics about the dataset in plain text
+        statistics about recovered genes in CSV format
         a subset of those PSMs not containing codon at all or containing supported codon
 
 =end
@@ -41,6 +50,12 @@ require "optparse"
 # require .rb files in library (including all subfolders)
 Dir[File.join(File.dirname(__FILE__), "lib", "**", "*.rb")].each do |file|
     require File.absolute_path(file)
+end
+# also require 01_create_maxquant_db to use method simplify_header()
+path_to_01_script = Dir[File.join(File.dirname(__FILE__), "01*.rb")][0]
+begin
+    require File.absolute_path(path_to_01_script)
+rescue OptionParser::InvalidOption, OptionParser::AmbiguousOption
 end
 
 class OptParser
@@ -52,6 +67,7 @@ class OptParser
         options[:input] = nil
         options[:output] = nil
         options[:psm] = nil
+        options[:genes] = nil
         options[:cdna] = nil
 
         opt_parser = OptionParser.new do |opts|
@@ -85,6 +101,11 @@ class OptParser
                 "selected information, in CSV format.") do |path|
                 options[:psm] = path
             end
+            opts.on("-g", "--genes FILE",
+                "Path to auxiliary output file containing recovered genes, ",
+                "in CSV format.") do |path|
+                options[:genes] = path
+            end
 
             opts.separator ""
             opts.on_tail("-h", "--help", "Show this message") do
@@ -106,6 +127,7 @@ class OptParser
         abort "Missing mandatory argument: --cdna" unless options[:cdna]
         abort "Missing mandatory argument: --output" unless options[:output]
         abort "Missing mandatory argument: --psm" unless options[:psm]
+        abort "Missing mandatory argument: --genes" unless options[:genes]
 
         return options
     end
@@ -124,41 +146,41 @@ designated_codon = get_codon_db_was_prepared_for(options[:input])
 
 # read in cDNA as reference
 all_prots, all_seqs = Sequence.read_fasta(options[:cdna])
-proteins_with_coverage_data = {}
+proteins_with_coverage_data = {} # use to collect PSMs, too
 total_num_prots_with_codon = 0 # all proteins with designated codon
 total_num_codon_pos = 0 # total number of codon positions
 all_prots.each_with_index do |prot, ind|
+    patched_name = simplify_header(ind+1)
     seq = all_seqs[ind]
     codons = Sequence.split_cdna_into_codons(seq)
 
-    proteins_with_coverage_data[prot] = {
+    proteins_with_coverage_data[patched_name] = {
         len: codons.size,  # total length
         covered_pos: [], # found positions, any support
-        codon_pos: [], # total codon pos
+        codon_pos: 0, # total codon pos
         b_y_covered_codon_pos: [], # found codon pos, only b/y supported
+        psms: [], # found PSMs, any support
+        psms_codon: [], # found PSMs covering codon pos, only b/y supported
     }
     codons.each_with_index do |codon, ind|
         if codon == designated_codon
             # collect codon position
             total_num_codon_pos += 1
-            proteins_with_coverage_data[prot][:codon_pos].push(ind)
+            proteins_with_coverage_data[patched_name][:codon_pos] += 1
         end
     end
-    if proteins_with_coverage_data[prot][:codon_pos].any?
+    if proteins_with_coverage_data[patched_name][:codon_pos] > 0
         total_num_prots_with_codon += 1
     end
 end
 
 # collect MaxQuant data
 # counts for all PSMs/ proteins, irrepective if they contain codon or not
-psms = [] #  reduce to unique values for non-redundant peptide count
 mass_errors = []
-proteins = [] # found proteins, to be made unique later
+
 # counts for PSMs/proteins with codon only, codon pos must be b/y supported
-# NOTE - can't use codon_pos to derive PSM counts, as PSM might contain more than one codon pos
-psm_subset_with_codon = []
+# NOTE - can't use codon_transl to derive PSM counts, as PSM might contain more than one codon pos
 mass_error_subset_with_codon = []
-protein_subset_with_codon = [] # found proteins with designated codon, to be made uniq later
 codon_transl = {} # keys: codon positions, values: PSMs per translation
 
 fh_psms = File.open(options[:psm], "w")
@@ -171,54 +193,57 @@ IO.foreach(options[:input]) do |line|
     end
     mq_data.parse_line(line)
 
-    # update generic counts
-    psms.push(mq_data.get_peptide)
-    proteins.push(mq_data.get_protein_name_used_in_db)
+    protein = mq_data.get_protein_name_used_in_db
+    psm = mq_data.get_peptide
+    all_pos = (mq_data.get_peptide_start..mq_data.get_peptide_stop).to_a
+
+    # update generic counts, irrespective of b/y support
+    proteins_with_coverage_data[protein][:psms].push(psm)
+    proteins_with_coverage_data[protein][:covered_pos].push(*all_pos)
     unless mq_data.is_masserr_unspecified?
         mass_errors.push(mq_data.get_masserr)
     end
-    proteins_with_coverage_data[mq_data.get_protein][:covered_pos].push(
-        (mq_data.get_peptide_start..mq_data.get_peptide_stop).to_a)
 
     found_translations = []
-    has_supported_codon_pos = false
 
     # update codon-specific counts, require codon pos to be b/y supported
-    if (mq_data.get_supported_pos & mq_data.get_codon_pos).any?
-        psm_subset_with_codon.push(mq_data.get_peptide)
-        protein_subset_with_codon.push(mq_data.get_protein_name_used_in_db)
+    supported_codon_pos = mq_data.get_codon_pos & mq_data.get_supported_pos
+    supported_codon_pos.each do |peptide_pos|
+        pos = mq_data.convert_peptide_to_protein_pos(peptide_pos)
+        key = protein + "-" + pos.to_s
+        transl = psm[peptide_pos]
+
+        unless codon_transl[key]
+            codon_transl[key] = {}
+        end
+        unless codon_transl[key][transl]
+            codon_transl[key][transl] = []
+        end
+        codon_transl[key][transl].push(psm)
+        found_translations.push(transl)
+
+        proteins_with_coverage_data[protein][:b_y_covered_codon_pos].push(pos)
+    end
+    if supported_codon_pos.any?
+        # update the following counts only once, even if PSM contains multiple supported codon pos
+
+        proteins_with_coverage_data[protein][:psms_codon].push(psm)
         unless mq_data.is_masserr_unspecified?
             mass_error_subset_with_codon.push(mq_data.get_masserr)
         end
-        (mq_data.get_supported_pos & mq_data.get_codon_pos).each do |pos|
-            pos_in_prot = mq_data.convert_peptide_to_protein_pos(pos)
-            proteins_with_coverage_data[mq_data.get_protein][:b_y_covered_codon_pos].push([pos_in_prot])
-
-            key = mq_data.get_protein_name_used_in_db + "-" + pos_in_prot.to_s
-            transl = mq_data.get_peptide[pos]
-            unless codon_transl[key]
-                codon_transl[key] = {}
-            end
-            unless codon_transl[key][transl]
-                codon_transl[key][transl] = []
-            end
-            codon_transl[key][transl].push(mq_data.get_peptide)
-
-            found_translations.push(transl)
-        end
-
-        has_supported_codon_pos = true
     end
 
     # output PSM
     fh_psms.print "#{mq_data.get_peptide},#{mq_data.get_masserr},"
     fh_psms.print "#{found_translations.join("/")},"
-    fh_psms.print "#{has_supported_codon_pos}\n"
+    fh_psms.print "#{supported_codon_pos.any?}\n"
 end
 
-# covert values as needed for fast and efficient output
-proteins = proteins.uniq
-protein_subset_with_codon = protein_subset_with_codon.uniq
+# prepare for output
+proteins = proteins_with_coverage_data.filter_map{|k,v| k if v[:psms].any?}
+psms = proteins_with_coverage_data.filter_map{|k,v| v[:psms]}.flatten
+protein_subset_with_codon = proteins_with_coverage_data.filter_map{|k,v| k if v[:psms_codon].any?}
+psm_subset_with_codon = proteins_with_coverage_data.filter_map{|k,v| v[:psms_codon]}.flatten
 num_covered_pos = codon_transl.keys.uniq.size
 
 # write statistics output
@@ -305,5 +330,23 @@ Sequence.amino_acids.each do |aa|
     end
     fh_stats.puts [aa, n_psms, n_peptides, n_pos, n_ambig_transl_pos].join("\t")
 end
+
+# write genes output
+fh_genes = File.open(options[:genes], "w")
+fh_genes.puts ["Gene", "Sequence coverage [%]", "#PSMs", "#non-redundant peptides", "#PSMs containing #{designated_codon}", "#{designated_codon} coverage [%]"].join(",")
+
+proteins_with_coverage_data.each do |prot, data|
+    next if data[:psms].empty?
+
+    seq_coverage = Statistics.percentage(data[:covered_pos].uniq.size, data[:len])
+    codon_coverage = Statistics.percentage(data[:b_y_covered_codon_pos].uniq.size, data[:codon_pos])
+    n_psms = data[:psms].size
+    n_non_red_peptides = data[:psms].uniq.size
+    n_psms_codon = data[:psms_codon].size
+
+    fh_genes.puts [prot, seq_coverage, n_psms, n_non_red_peptides, n_psms_codon, codon_coverage].join(",")
+end
+
 fh_stats.close
 fh_psms.close
+fh_genes.close

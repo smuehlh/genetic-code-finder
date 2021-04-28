@@ -37,13 +37,11 @@ require "optparse"
         input (str): path to input file (enriched evidence file; output of script 02_combine_maxquant_tables)
         cdna (str): path input FASTA (cDNA sequences; used as input for 01_create_maxquant_dbs)
         output (str): path to output TXT (statistics described above)
-        psm (str): path to output CSV (PSM subset for generating plots)
         genes (str): path to output CSV (gene statistics described above)
 
     Returns
         statistics about the dataset in plain text
         statistics about recovered genes in CSV format
-        a subset of those PSMs not containing codon at all or containing supported codon
 
 =end
 
@@ -66,7 +64,6 @@ class OptParser
         # mandatory parameters
         options[:input] = nil
         options[:output] = nil
-        options[:psm] = nil
         options[:genes] = nil
         options[:cdna] = nil
 
@@ -78,7 +75,7 @@ class OptParser
             opts.separator "This program comes with ABSOLUTELY NO WARRANTY"
 
             opts.separator ""
-            opts.separator "Usage: ruby #{File.basename($PROGRAM_NAME)} -i combined-evidence-msms -c cdna -o stats-output -p psm-output"
+            opts.separator "Usage: ruby #{File.basename($PROGRAM_NAME)} -i combined-evidence-msms -c cdna -o stats-output -g gene-stats-output"
 
             opts.on("-i", "--input FILE",
                 "Path to input file enriched evidence",
@@ -95,11 +92,6 @@ class OptParser
             opts.on("-o", "--output FILE",
                 "Path to statistics output file, in TXT format.") do |path|
                 options[:output] = path
-            end
-            opts.on("-p", "--psm FILE",
-                "Path to auxiliary output file containing non-decoy PSM and ",
-                "selected information, in CSV format.") do |path|
-                options[:psm] = path
             end
             opts.on("-g", "--genes FILE",
                 "Path to auxiliary output file containing recovered genes, ",
@@ -126,7 +118,6 @@ class OptParser
         abort "Missing mandatory argument: --input" unless options[:input]
         abort "Missing mandatory argument: --cdna" unless options[:cdna]
         abort "Missing mandatory argument: --output" unless options[:output]
-        abort "Missing mandatory argument: --psm" unless options[:psm]
         abort "Missing mandatory argument: --genes" unless options[:genes]
 
         return options
@@ -183,8 +174,6 @@ mass_errors = []
 mass_error_subset_with_codon = []
 codon_transl = {} # keys: codon positions, values: PSMs per translation
 
-fh_psms = File.open(options[:psm], "w")
-fh_psms.puts "PSM,Mass error [ppm],#{designated_codon} translation(s),Has b/y supported #{designated_codon} position?"
 mq_data = ParseEnrichedEvidence.new()
 IO.foreach(options[:input]) do |line|
     if mq_data.is_header
@@ -204,8 +193,6 @@ IO.foreach(options[:input]) do |line|
         mass_errors.push(mq_data.get_masserr)
     end
 
-    found_translations = []
-
     # update codon-specific counts, require codon pos to be b/y supported
     supported_codon_pos = mq_data.get_codon_pos & mq_data.get_supported_pos
     supported_codon_pos.each do |peptide_pos|
@@ -220,7 +207,6 @@ IO.foreach(options[:input]) do |line|
             codon_transl[key][transl] = []
         end
         codon_transl[key][transl].push(psm)
-        found_translations.push(transl)
 
         proteins_with_coverage_data[protein][:b_y_covered_codon_pos].push(pos)
     end
@@ -232,11 +218,6 @@ IO.foreach(options[:input]) do |line|
             mass_error_subset_with_codon.push(mq_data.get_masserr)
         end
     end
-
-    # output PSM
-    fh_psms.print "#{mq_data.get_peptide},#{mq_data.get_masserr},"
-    fh_psms.print "#{found_translations.join("/")},"
-    fh_psms.print "#{supported_codon_pos.any?}\n"
 end
 
 # prepare for output
@@ -348,5 +329,4 @@ proteins_with_coverage_data.each do |prot, data|
 end
 
 fh_stats.close
-fh_psms.close
 fh_genes.close

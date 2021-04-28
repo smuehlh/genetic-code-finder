@@ -48,14 +48,13 @@ Combine and enrich MaxQuant output files `evidence.txt` and `msms.txt` for downs
  - Save resulting data (parameter `--output`) to use it as input for downstream analysis
 
 ```bash
-ruby 03_make_statistics.rb --input Clavispora_enriched_evidence.txt --cdna sample_data/Clavispora_cDNA_excerpt.fasta --output Clavispora_statistics.txt --psm Clavispora_psms.csv --genes Clavispora_gene_statistics.csv
+ruby 03_make_statistics.rb --input Clavispora_enriched_evidence.txt --cdna sample_data/Clavispora_cDNA_excerpt.fasta --output Clavispora_statistics.txt --genes Clavispora_gene_statistics.csv
 ```
 Analyse MaxQuant output and collect statistics about found codon (e.g. CTG) translations.
 
  - Collect generic counts such as number of peptide spectrum matches and recovered proteins and CTG positions (parameters `--input`, `--cdna`)
  - Collect CTG translation counts, based on supported CTG positions
  - Save generic counts as flat text file (parameter `--output`)
- - Save enriched list of peptide spectrum matches CTG translation for visual inspection (parameter `--psm`)
  - Save generic counts per gene (parameter `--genes`)
 
 ## Test

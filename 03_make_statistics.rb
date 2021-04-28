@@ -184,13 +184,13 @@ IO.foreach(options[:input]) do |line|
     has_supported_codon_pos = false
 
     # update codon-specific counts, require codon pos to be b/y supported
-    if (mq_data.get_supported_pos && mq_data.get_codon_pos).any?
+    if (mq_data.get_supported_pos & mq_data.get_codon_pos).any?
         psm_subset_with_codon.push(mq_data.get_peptide)
         protein_subset_with_codon.push(mq_data.get_protein_name_used_in_db)
         unless mq_data.is_masserr_unspecified?
             mass_error_subset_with_codon.push(mq_data.get_masserr)
         end
-        (mq_data.get_supported_pos && mq_data.get_codon_pos).each do |pos|
+        (mq_data.get_supported_pos & mq_data.get_codon_pos).each do |pos|
             pos_in_prot = mq_data.convert_peptide_to_protein_pos(pos)
             proteins_with_coverage_data[mq_data.get_protein][:b_y_covered_codon_pos].push([pos_in_prot])
 

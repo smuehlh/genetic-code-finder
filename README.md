@@ -28,34 +28,58 @@ This library contains scripts for each of the above mentioned steps, named in th
 
 ### Script usage
 
+#### 1. Prepare database input for MaxQuant search
+
 ```bash
 ruby 01_create_maxquant_db.rb --input sample_data/Clavispora_cDNA_excerpt.fasta --output Clavispora_maxquant_db.fas --map Clavispora_maxquant_db_map.csv [--codon CTG] [--cleavage K,R] [--ile]
 ```
-Prepare database input for MaxQuant search
+
  - Split genomic FASTA (parameter `--input`) at cleavage sites (parameter `--cleavage`, defaults to K, R)
  - Translate *in-silico* cleaved sequences, translating designated codon (parameter `--codon`, defaults to CTG) into all amino acids (resulting in 19  peptides all differing in their CTG translation)
  - Per default, translation into isoleucine will be omitted (parameter `--ile` to create peptides for both isoleucine and leucine)
 - Standardise original sequence names (headers in input FASTA) for use in MaxQuant, storing the mapping between original and standardised names (parameter `--map`)
 - Save resulting peptides as FASTA (parameter `--output`) to use them as input in MaxQuant search
 
+#### 2. Combine and enrich MaxQuant output files `evidence.txt` and `msms.txt` for downstream analysis
+
 ```bash
 ruby 02_combine_maxquant_tables.rb --evidence sample_data/evidence.txt --msms sample_data/msms.txt --map Clavispora_maxquant_db_map.csv --cdna sample_data/Clavispora_cDNA_excerpt.fasta --output Clavispora_enriched_evidence.txt [--codon CTG]
 ```
-Combine and enrich MaxQuant output files `evidence.txt` and `msms.txt` for downstream analysis.
+
  - Map peptide spectrum matches in evidence file (parameter `--evidence`) proteins (parameter `--cdna`, optional parameter `--codon`) and original protein names (parameter `--map`)
  - Map matched peptide fragments from msms file (parameter `--msms`) onto corresponding peptide spectrum matches
  - Remove decoy hits
  - Save resulting data (parameter `--output`) to use it as input for downstream analysis
 
+#### 3. Analyse MaxQuant output and collect statistics about found codon (e.g. CTG) translations
+
 ```bash
 ruby 03_make_statistics.rb --input Clavispora_enriched_evidence.txt --cdna sample_data/Clavispora_cDNA_excerpt.fasta --output Clavispora_statistics.txt --genes Clavispora_gene_statistics.csv
 ```
-Analyse MaxQuant output and collect statistics about found codon (e.g. CTG) translations.
 
  - Collect generic counts such as number of peptide spectrum matches and recovered proteins and CTG positions (parameters `--input`, `--cdna`)
  - Collect CTG translation counts, based on supported CTG positions
  - Save generic counts as flat text file (parameter `--output`)
  - Save generic counts per gene (parameter `--genes`)
+
+#### 4. [Optional] plot statistics
+
+Rscripts are meant as starting point for custom plots.
+```bash
+Rscript 04_plot_translation.R Clavispora_statistics.txt [CTG]
+```
+- Plot CTG translation counts (parameter `input.txt`)
+    - Fraction of PSMs containing CTG with a given translation
+
+```bash
+Rscript 04_plot_genes.R Clavispora_gene_statistics.csv [CTG]
+```
+
+- Plot counts per gene (parameter `input.csv`)
+    - Sequence coverage
+    - Number of PSMs/ non-redundant peptides
+    - Number of PSMs containing CTG
+    - CTG coverage
 
 ## Test
 ### Unit tests

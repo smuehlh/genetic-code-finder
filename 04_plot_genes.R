@@ -3,7 +3,7 @@
 # set filename and codon
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) == 0) {
-    stop("Usage: Rscript 03_plot_genes.R genes_file.csv [codon]")
+    stop("Usage: Rscript 04_plot_genes.R genes_file.csv [codon]")
 }
 fname <- args[1]
 codon <- if (length(args) == 2) args[2] else "CTG"  # codon defaults to CTG

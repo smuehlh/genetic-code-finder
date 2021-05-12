@@ -90,6 +90,7 @@ ruby test/evidence.rb  # test lib.parse_evidence.rb
 ruby test/msms.rb  # test lib/parse_msms.rb
 ruby test/enriched_evidence.rb  # test lib/parse_enriched_evidence.rb
 ruby test/statistics.rb  # test lib/statistics.rb
+ruby test/file_helper.rb  # test lib/file_helper.rb
 ```
 
 ### Integration tests

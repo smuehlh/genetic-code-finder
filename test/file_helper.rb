@@ -10,9 +10,9 @@ require "tempfile"
 
 =end
 
-# require .rb files in library (including all subfolders)
-Dir[File.join(__dir__, "..", "lib", "**", "*.rb")].each do |file|
-    require File.absolute_path(file)
+# require .rb files in library
+Dir[File.join(__dir__, "..", "lib", "*.rb")].each do |file|
+    require file
 end
 
 # FileHelper.file_exist_or_die

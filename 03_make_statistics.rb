@@ -45,14 +45,13 @@ require "optparse"
 
 =end
 
-# require .rb files in library (including all subfolders)
-Dir[File.join(File.dirname(__FILE__), "lib", "**", "*.rb")].each do |file|
-    require File.absolute_path(file)
+# require .rb files in library
+Dir[File.join(__dir__, "lib", "**", "*.rb")].each do |file|
+    require file
 end
 # also require 01_create_maxquant_db to use method simplify_header()
-path_to_01_script = Dir[File.join(File.dirname(__FILE__), "01*.rb")][0]
 begin
-    require File.absolute_path(path_to_01_script)
+    require_relative "01_create_maxquant_db.rb"
 rescue OptionParser::InvalidOption, OptionParser::AmbiguousOption
 end
 

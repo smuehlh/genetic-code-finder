@@ -15,9 +15,9 @@ require "tempfile"
 
 =end
 
-# require .rb files in library (including all subfolders)
-Dir[File.join(__dir__, "..", "lib", "**", "*.rb")].each do |file|
-    require File.absolute_path(file)
+# require .rb files in library
+Dir[File.join(__dir__, "..", "lib", "*.rb")].each do |file|
+    require file
 end
 
 header = "Raw file\tScan number\tScan index\tSequence\tLength\tMissed cleavages\tModifications\tModified sequence\tOxidation (M) Probabilities\tOxidation (M) Score Diffs\tAcetyl (Protein N-term)\tOxidation (M)\tProteins\tCharge\tFragmentation\tMass analyzer\tType\tScan event number\tIsotope index\tm/z\tMass\tMass Error [ppm]\tSimple Mass Error [ppm]\tRetention time\tPEP\tScore\tDelta score\tScore diff\tLocalization prob\tCombinatorics\tPIF\tFraction of total spectrum\tBase peak fraction\tPrecursor Full ScanNumber\tPrecursor Intensity\tPrecursor Apex Fraction\tPrecursor Apex Offset\tPrecursor Apex Offset Time\tMatches\tIntensities\tMass Deviations [Da]\tMass Deviations [ppm]\tMasses\tNumber of Matches\tIntensity coverage\tPeak coverage\tNeutral loss level\tETD identification type\tReverse\tAll scores\tAll sequences\tAll modified sequences\tid\tProtein group IDs\tPeptide ID\tMod. peptide ID\tEvidence ID\tOxidation (M) site IDs"

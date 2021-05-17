@@ -1,3 +1,4 @@
+require_relative "parse_evidence.rb"
 class ParseEnrichedEvidence < ParseEvidence
 
     alias_method :parent_get_protein, :get_protein

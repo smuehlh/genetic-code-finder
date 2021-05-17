@@ -25,9 +25,9 @@ require "optparse"
 
 =end
 
-# require .rb files in library (including all subfolders)
-Dir[File.join(File.dirname(__FILE__), "lib", "**", "*.rb")].each do |file|
-    require File.absolute_path(file)
+# require .rb files in library
+Dir[File.join(__dir__, "lib", "**", "*.rb")].each do |file|
+    require file
 end
 
 class OptParser

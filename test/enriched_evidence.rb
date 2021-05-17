@@ -14,9 +14,9 @@ require "tempfile"
         - parse supported positions
 =end
 
-# require .rb files in library (including all subfolders)
-Dir[File.join(__dir__, "..", "lib", "**", "*.rb")].each do |file|
-    require File.absolute_path(file)
+# require .rb files in library
+Dir[File.join(__dir__, "..", "lib", "*.rb")].each do |file|
+    require file
 end
 
 header = "cDNA\tStart pos in protein\tEnd pos in protein\tCTG codon pos\tOriginal protein name\tb/y-ion supported pos\tCorresponding scan numbers\tSequence\tLength\tModifications\tModified sequence\tOxidation (M) Probabilities\tOxidation (M) Score Diffs\tAcetyl (Protein N-term)\tOxidation (M)\tMissed cleavages\tProteins\tLeading Proteins\tLeading Razor Protein\tType\tRaw file\tFraction\tExperiment\tMS/MS m/z\tCharge\tm/z\tMass\tResolution\tUncalibrated - Calibrated m/z [ppm]\tUncalibrated - Calibrated m/z [Da]\tMass Error [ppm]\tMass Error [Da]\tUncalibrated Mass Error [ppm]\tUncalibrated Mass Error [Da]\tMax intensity m/z 0\tRetention time\tRetention length\tCalibrated retention time\tCalibrated retention time start\tCalibrated retention time finish\tRetention time calibration\tMatch time difference\tMatch m/z difference\tMatch q-value\tMatch score\tNumber of data points\tNumber of scans\tNumber of isotopic peaks\tPIF\tFraction of total spectrum\tBase peak fraction\tPEP\tMS/MS Count\tMS/MS Scan Number\tScore\tDelta score\tCombinatorics\tIntensity\tReverse\tPotential contaminant\tid\tProtein group IDs\tPeptide ID\tMod. peptide ID\tMS/MS IDs\tBest MS/MS\tAIF MS/MS IDs\tOxidation (M) site IDs"

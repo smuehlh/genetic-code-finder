@@ -12,7 +12,7 @@ Copyright (c) 2021, by Göttingen University
 
 ## Installation
 
-No installation required other than Ruby 2.7 or later.
+No installation required other than Ruby 3.0 or later.
 
 
 ## Usage

@@ -49,11 +49,6 @@ require "optparse"
 Dir[File.join(__dir__, "lib", "**", "*.rb")].each do |file|
     require file
 end
-# also require 01_create_maxquant_db to use method simplify_header()
-begin
-    require_relative "01_create_maxquant_db.rb"
-rescue OptionParser::InvalidOption, OptionParser::AmbiguousOption
-end
 
 class OptParser
     def self.parse(args)
@@ -121,6 +116,11 @@ class OptParser
 
         return options
     end
+end
+
+# re-use method from 01_create_maxquant_db.rb
+def simplify_header(num)
+    "g#{num}"
 end
 
 def get_codon_db_was_prepared_for(path)

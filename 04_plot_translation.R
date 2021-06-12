@@ -2,8 +2,17 @@
 
 # set filename and codon
 args <- commandArgs(trailingOnly=TRUE)
+banner <- "Plot translation data.
+
+Copyright (c) 2021, by Göttingen University
+Author: Stefanie Mühlhausen
+This program comes with ABSOLUTELY NO WARRANTY
+
+"
+usage <- "Usage: Rscript 04_plot_translation.R statistics_file.txt [codon]"
 if (length(args) == 0) {
-    stop("Usage: Rscript 04_plot_translation.R statistics_file.txt [codon]")
+    cat(banner)
+    stop(usage)
 }
 fname <- args[1]
 codon <- if (length(args) == 2) args[2] else "CTG"  # codon defaults to CTG

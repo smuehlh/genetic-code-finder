@@ -71,7 +71,7 @@ Rscript 04_plot_translation.R Clavispora_statistics.txt [CTG]
 Rscript 04_plot_genes.R Clavispora_gene_statistics.csv [CTG]
 ```
 
-![Example analysis: (A) CTG translation and (B) gene recovery in _Clavispora lusitaniae ATCC 42720_ (full dataset: \[ProteomeXchange\](http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD009494-1&test=no), \[@Muehlhausen2018\]).\label{fig:fig1}](fig1A_B.pdf)
+![Example analysis: (A) CTG translation and (B) gene recovery in _Clavispora lusitaniae ATCC 42720_ (full dataset: PXD009494 at ProteomeXchange, \[@Muehlhausen2018\]).\label{fig:fig1}](fig1A_B.pdf)
 
 
 # Acknowledgements
